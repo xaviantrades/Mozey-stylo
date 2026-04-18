@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cloud Music Player with Firestore</title>
+<style>
+/* Basic body styles */
+body {
+  font-family: sans-serif;
+  margin: 0;
+  padding-bottom: 120px; /* space for mini player */
+}
+
+/* Add song form styles */
+#addSongForm {
+  padding: 10px;
+  background: #f0f0f0;
+}
+#addSongForm input {
+  margin: 4px;
+  padding: 6px;
+}
+#addSongForm button {
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+/* Full player styles */
+#fullPlayer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  max-height: 300px;
+  background: #222;
+  color: #fff;
+  display: none; /* initially hidden */
+  flex-direction: column;
+  padding: 10px;
+  box-shadow: 0 -2px 6px rgba(0,0,0,0.5);
+  z-index: 9999;
+}
+#fullHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+#fullHeader button {
+  background: #555;
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+#fullHeader button:hover { background: #888; }
+
+/* Track info */
+#playerInfo {
+  display: flex;
+  margin-top: 10px;
+  align-items: center;
+}
+#playerInfo img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-right: 12px;
+}
+#trackDetails p { margin: 4px 0; }
+
+/* Player controls */
+#controls {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+#controls button {
+  margin: 0 6px;
+  padding: 8px 12px;
+  background: #555;
+  border: none;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+}
+#controls button:hover { background: #888; }
+
+/* Playlist list */
+#playlist {
+  margin-top: 10px;
+  max-height: 100px;
+  overflow-y: auto;
+}
+#playlist div {
+  padding: 4px;
+  cursor: pointer;
+}
+#playlist .active {
+  background: #666;
+}
+
+/* Mini player styles */
+#miniPlayer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #222;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  box-shadow: 0 -2px 6px rgba(0,0,0,0.5);
+  z-index: 9999;
+}
+#miniPlayer img {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-right: 8px;
+}
+#miniPlayer button {
+  margin-left: 6px;
+  background: #555;
+  border: none;
+  color: #fff;
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+#miniPlayer button:hover { background: #888; }
+
+</style>
+</head>
+<body>
+
+<h2>Cloud Music Player with Firestore</h2>
+
+<!-- Add song form -->
+<div id="addSongForm">
+  <input type="text" id="songName" placeholder="Song Name">
+  <input type="text" id="artistName" placeholder="Artist Name">
+  <input type="text" id="thumbnailURL" placeholder="Thumbnail URL">
+  <input type="text" id="year" placeholder="Year">
+  <input type="text" id="genre" placeholder="Genre">
+  <input type="text" id="mp3URL" placeholder="GitHub Raw MP3 URL">
+  <button id="addSongBtn">Add Song</button>
+</div>
+
+<!-- Full Player -->
+<div id="fullPlayer">
+  <div id="fullHeader">
+    <div>Now Playing</div>
+    <button id="minimizeBtn">−</button>
+  </div>
+
+  <div id="playerInfo">
+    <img id="trackThumb" src="" alt="Thumbnail">
+    <div id="trackDetails">
+      <p id="trackTitle"></p>
+      <p id="trackArtist"></p>
+      <p id="trackYearGenre"></p>
+    </div>
+  </div>
+
+  <div id="controls">
+    <button id="prevBtn">⏮</button>
+    <button id="playPauseBtn">Play</button>
+    <button id="nextBtn">⏭</button>
+    <button id="seekBackBtn">«10s</button>
+    <button id="seekForwardBtn">10s»</button>
+  </div>
+
+  <div id="playlist"></div>
+</div>
+
+<!-- Mini Player -->
+<div id="miniPlayer">
+  <img id="miniThumb" src="" alt="Thumbnail">
+  <div id="miniTitle">No song playing</div>
+  <button id="miniPlayPause">Play</button>
+  <button id="maximizeBtn">⬆</button>
+  <button id="closeMiniBtn">×</button>
+</div>
+
+<!-- Hidden audio element -->
+<audio id="audio"></audio>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+<script>
+/* ===================== FIREBASE CONFIG ===================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyA_VII-o7zVyliueszM66wf1xYSn26dUbo",
+  authDomain: "sokoauthication.firebaseapp.com",
+  projectId: "sokoauthication",
+  storageBucket: "sokoauthication.firebasestorage.app",
+  messagingSenderId: "758223026817",
+  appId: "1:758223026817:web:a485d29ea4ffbe143eab80",
+  measurementId: "G-3J0QN5X2FF"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const playlistCollection = db.collection("playlist");
+
+/* ===================== PLAYER VARIABLES ===================== */
+const audio = document.getElementById('audio');
+let playlist = [];
+let currentIndex = 0;
+
+/* DOM ELEMENTS */
+const fullPlayer = document.getElementById('fullPlayer');
+const miniPlayer = document.getElementById('miniPlayer');
+const trackThumb = document.getElementById('trackThumb');
+const trackTitle = document.getElementById('trackTitle');
+const trackArtist = document.getElementById('trackArtist');
+const trackYearGenre = document.getElementById('trackYearGenre');
+const miniThumb = document.getElementById('miniThumb');
+const miniTitle = document.getElementById('miniTitle');
+const playPauseBtn = document.getElementById('playPauseBtn');
+const miniPlayPause = document.getElementById('miniPlayPause');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const seekForwardBtn = document.getElementById('seekForwardBtn');
+const seekBackBtn = document.getElementById('seekBackBtn');
+const playlistDiv = document.getElementById('playlist');
+const minimizeBtn = document.getElementById('minimizeBtn');
+const maximizeBtn = document.getElementById('maximizeBtn');
+const closeMiniBtn = document.getElementById('closeMiniBtn');
+
+/* ===================== FIRESTORE FUNCTIONS ===================== */
+// Fetch playlist from Firestore
+async function fetchPlaylistFromFirestore() {
+  try {
+    const snapshot = await playlistCollection.get();
+    playlist = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    currentIndex = 0;
+    updatePlaylistUI();
+    loadTrack();
+  } catch (err) {
+    console.error("Error fetching playlist: ", err);
+  }
+}
+
+// Add song to Firestore
+async function addSongToFirestore(song) {
+  try {
+    const docRef = await playlistCollection.add(song);
+    song.id = docRef.id;
+    playlist.push(song);
+    updatePlaylistUI();
+    loadTrack();
+  } catch (err) {
+    console.error("Error adding song: ", err);
+  }
+}
+
+/* ===================== EVENT LISTENERS ===================== */
+// Add song from form
+document.getElementById('addSongBtn').addEventListener('click', () => {
+  const song = {
+    title: document.getElementById('songName').value,
+    artist: document.getElementById('artistName').value,
+    thumbnail: document.getElementById('thumbnailURL').value,
+    year: document.getElementById('year').value,
+    genre: document.getElementById('genre').value,
+    url: document.getElementById('mp3URL').value
+  };
+  if (!song.url) return alert('MP3 URL is required');
+  addSongToFirestore(song);
+  document.getElementById('addSongForm').reset();
+});
+
+/* ===================== PLAYER FUNCTIONS ===================== */
+// Load current track
+function loadTrack() {
+  if (!playlist[currentIndex]) return;
+  const song = playlist[currentIndex];
+  audio.src = song.url;
+  trackThumb.src = song.thumbnail || '';
+  trackTitle.textContent = song.title;
+  trackArtist.textContent = song.artist;
+  trackYearGenre.textContent = `${song.year} | ${song.genre}`;
+  miniThumb.src = song.thumbnail || '';
+  miniTitle.textContent = `${song.title} - ${song.artist}`;
+  highlightActive();
+}
+
+// Highlight active in playlist
+function highlightActive() {
+  Array.from(playlistDiv.children).forEach((el,i) => {
+    el.classList.toggle('active', i===currentIndex);
+  });
+}
+
+// Update playlist UI
+function updatePlaylistUI() {
+  playlistDiv.innerHTML = '';
+  playlist.forEach((s,i) => {
+    const div = document.createElement('div');
+    div.textContent = s.title + ' - ' + s.artist;
+    div.onclick = () => { currentIndex=i; loadTrack(); playAudio(); };
+    if (i===currentIndex) div.classList.add('active');
+    playlistDiv.appendChild(div);
+  });
+}
+
+// Play / Pause
+function playAudio() { audio.play(); playPauseBtn.textContent='Pause'; miniPlayPause.textContent='Pause'; }
+function pauseAudio() { audio.pause(); playPauseBtn.textContent='Play'; miniPlayPause.textContent='Play'; }
+
+// Buttons
+playPauseBtn.onclick = () => audio.paused ? playAudio() : pauseAudio();
+miniPlayPause.onclick = () => audio.paused ? playAudio() : pauseAudio();
+prevBtn.onclick = () => { currentIndex=(currentIndex-1+playlist.length)%playlist.length; loadTrack(); playAudio(); };
+nextBtn.onclick = () => { currentIndex=(currentIndex+1)%playlist.length; loadTrack(); playAudio(); };
+seekForwardBtn.onclick = () => { audio.currentTime += 10; };
+seekBackBtn.onclick = () => { audio.currentTime -= 10; };
+
+// Auto next track
+audio.addEventListener('ended', () => nextBtn.click());
+
+// Minimize / Maximize
+minimizeBtn.onclick = () => { fullPlayer.style.display='none'; miniPlayer.style.display='flex'; };
+maximizeBtn.onclick = () => { fullPlayer.style.display='flex'; miniPlayer.style.display='none'; };
+closeMiniBtn.onclick = () => { miniPlayer.style.display='none'; pauseAudio(); };
+
+// Show full player on play
+audio.addEventListener('play', () => { fullPlayer.style.display='flex'; miniPlayer.style.display='none'; });
+
+/* ===================== INITIALIZE ===================== */
+fetchPlaylistFromFirestore();
+
+</script>
+</body>
+</html>

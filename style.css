@@ -1,0 +1,364 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #121212;
+    color: #fff;
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background-color: #1e1e1e;
+    height: 50px;
+  }
+  header button {
+    background-color: #ff5500;
+    border: none;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  h2 {
+    margin: 15px;
+    font-size: 1.2em;
+  }
+
+  nav {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    background-color: #1e1e1e;
+    padding: 10px 0;
+  }
+  nav div {
+    text-align: center;
+    font-size: 0.8em;
+    cursor: pointer;
+  }
+ 
+  #trackTitle {
+    flex: 1;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+
+
+
+
+  .player {
+    height: 95vh;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    transition: all 0.4s ease-in-out;
+  }
+  
+  .window-controls {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    cursor: pointer;
+    z-index: 100;
+  }
+  
+  .window-controls i {
+    font-size: 2rem;
+    opacity: 0.8;
+  }
+  
+  .maximize-btn { display: none; }
+  
+  .details {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    margin-top: 25px;
+  }
+  
+  .track-art {
+    margin: 25px;
+    height: 250px;
+    width: 250px;
+    border-radius: 15%;
+    background-size: cover;
+    background-position: center;
+    box-shadow: 0px 10px 30px rgba(0,0,0,0.3);
+    transition: all 0.4s ease;
+  }
+  
+  .now-playing { font-size: 1rem; text-transform: uppercase; }
+  .track-name { font-size: 2.5rem; font-weight: bold; text-align: center; }
+  .track-artist { font-size: 1.2rem; margin-top: 5px; }
+  
+  .buttons {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-top: 20px;
+  }
+  
+  .playpause-track, .prev-track, .next-track {
+    padding: 25px;
+    opacity: 0.8;
+    cursor: pointer;
+  }
+  
+  .playpause-track:hover, .prev-track:hover, .next-track:hover { opacity: 1.0; }
+  
+  .slider_container {
+    width: 75%;
+    max-width: 400px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
+  }
+  
+  .seek_slider, .volume_slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 5px;
+    background: #fff;
+    opacity: 0.7;
+    transition: opacity .2s;
+  }
+  
+  .seek_slider::-webkit-slider-thumb, .volume_slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 15px;
+    height: 15px;
+    background: white;
+    cursor: pointer;
+    border-radius: 50%;
+  }
+  
+  .seek_slider { width: 60%; }
+  .volume_slider { width: 30%; }
+  .current-time, .total-duration { padding: 10px; font-size: 0.9rem; }
+  
+  /* MINIMIZED STATE */
+  .player.minimized {
+    height: 60px;
+    width: 100%;
+    position: fixed;
+    bottom: 30px;
+    left: 0;
+    flex-direction: row;
+    justify-content: space-between;
+    color: #fff;
+    background-color: #222;
+    box-shadow: 0 -2px 6px rgba(0,0,0,0.3);
+    padding: 6px 12px;
+    box-sizing: border-box;
+    z-index: 1000;
+  }
+  
+  .player.minimized .now-playing,
+  .player.minimized .track-name,
+  .player.minimized .track-artist,
+  .player.minimized .prev-track,
+  .player.minimized .slider_container,
+  .player.minimized .minimize-btn {
+    display: none;
+  }
+  
+  .player.minimized .maximize-btn { display: block; }
+  .player.minimized .window-controls { position: static; margin-left: 10px; }
+  .player.minimized .details { margin: 0; flex-direction: row; flex: 1; }
+  .player.minimized .track-art { height: 60px; width: 60px; margin: 0 15px 0 0; border-radius: 8px; }
+  .player.minimized .playpause-track { padding: 10px; font-size: 0.6em; }
+  .player.minimized .next-track { padding: 10px; font-size: 0.8em; }
+  
+  .card {
+  cursor: pointer; /* indicates it's clickable */
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.card, h2 {
+  transition: opacity 0.3s ease;
+  cursor: pointer;
+}
+
+.hidden {
+  display: none;
+}
+
+/* General App Styling */
+#music-app {
+  font-family: Arial, sans-serif;
+  color: #fff;
+  background: #121212;
+  height: 100%;
+}
+
+
+
+
+.play-btn {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  background: #1db954;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 18px;
+  color: #fff;
+  cursor: pointer;
+}
+
+
+/* Scrollbar Styling */
+
+.hidden {
+  display: none;
+}
+
+#playlistContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.track {
+  display: flex;
+  align-items: center;
+  padding: 5px;
+  cursor: pointer;
+  border-bottom: 1px solid #ccc;
+}
+
+.track-thumb {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  margin-right: 10px;
+}
+
+.track-info {
+  display: flex;
+  flex-direction: column;
+}
+.track-name {
+  font-weight: bold;
+}
+.track-artist {
+  font-size: 0.9em;
+  color: #555;
+}
+.track:hover {
+  background-color: #f0f0f0;
+}
+
+/* General App Background */
+
+/* Container for the track list */
+#container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px; /* Space between each song */
+}
+
+/* Individual Track Card */
+.homescreen {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  background-color: transparent;
+  transition: background-color 0.2s;
+}
+
+/* Hover effect (optional, for better UX) */
+.homescreen:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+/* Album Art Image */
+.homescreen img {
+  width: 56px;
+  height: 56px;
+  border-radius: 6px; /* Rounded corners */
+  object-fit: cover;
+  margin-right: 16px; /* Space between image and text */
+}
+
+/* Container for Title and Artist */
+.song-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex-grow: 1; /* This pushes the 3-dots to the far right */
+  gap: 4px; /* Space between title and artist */
+}
+
+/* Song Title */
+.song-info .title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* Adds '...' if text is too long */
+}
+
+/* Artist and Plays */
+.song-info .artist {
+  margin: 0;
+  font-size: 14px;
+  color: #aaaaaa; /* Light gray text */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.download-icon {
+ 
+  display: flex;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  margin-right: 30px;
+}
+
+/* Three Dots Menu */
+.more-options {
+  color: #ffffff;
+  font-size: 20px;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+/* Spinner styling */
+#homescreen .loading-spinner {
+  width: 60px;
+  height: 60px;
+  border: 6px solid #f3f3f3;         /* light gray background */
+  border-top: 6px solid #1db954;      /* colored spinning segment */
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 100px auto;                 /* centers spinner in container */
+}
+
+/* Spinner animation */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Simple Music Player - Add Song</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+  <link href="styl.css" rel="stylesheet" />
+  <style>
+    /* ===== General Page Styles ===== */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f9;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+}
+
+/* ===== Container ===== */
+#add-song-form {
+  background-color: #fff;
+  padding: 30px 40px;
+  margin: 50px auto;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 500px;
+}
+
+/* ===== Form Title ===== */
+#add-song-form h2 {
+  text-align: center;
+  margin-bottom: 25px;
+  color: #333;
+}
+
+/* ===== Form Fields ===== */
+#songForm label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #555;
+}
+
+#songForm input[type="text"],
+#songForm input[type="number"] {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.3s;
+}
+
+#songForm input[type="text"]:focus,
+#songForm input[type="number"]:focus {
+  border-color: #4CAF50;
+  outline: none;
+}
+
+/* ===== Submit Button ===== */
+#songForm button {
+  width: 100%;
+  padding: 12px;
+  background-color: #4CAF50;
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+#songForm button:hover {
+  background-color: #45a049;
+}
+
+/* ===== Status Message ===== */
+#status {
+  text-align: center;
+  margin-top: 15px;
+  font-weight: bold;
+}
+
+/* ===== Navigation ===== */
+nav {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 25px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+nav a, nav div {
+  color: #4CAF50;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+nav a:hover, nav div:hover {
+  color: #333;
+}
+  </style>
+</head>
+<body>
+<div id="add-song-form">
+  <h2>Add New Song</h2>
+  <form id="songForm">
+    <label for="title">Song Title:</label>
+    <input type="text" id="title" required><br><br>
+
+    <label for="artist">Artist:</label>
+    <input type="text" id="artist" required><br><br>
+
+    <label for="album">Album:</label>
+    <input type="text" id="album" placeholder="Optional"><br><br>
+
+    <label for="genre">Genre:</label>
+    <input type="text" id="genre" placeholder="e.g., Gospel, Pop" required><br><br>
+
+    <label for="year">Year:</label>
+    <input type="number" id="year" placeholder="YYYY" required><br><br>
+
+    <label for="mood">Mood / Theme:</label>
+    <input type="text" id="mood" placeholder="e.g., Chill, Party"><br><br>
+
+    <label for="thumbnail">Thumbnail URL:</label>
+    <input type="text" id="thumbnail" placeholder="https://..." required><br><br>
+
+    <label for="url">Song URL:</label>
+    <input type="text" id="url" placeholder="https://..." required><br><br>
+
+    <button type="submit">Add Song</button>
+  </form>
+
+  <p id="status"></p>
+  <nav>
+    <a href="index.html" id="home" style="text-decoration: none;">Home</a>
+    <div>Search</div>
+    <div>Library</div>
+    <div id="download">Download</div>
+  </nav>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script>
+  // ===================== FIREBASE CONFIG =====================
+  const firebaseConfig = {
+    apiKey: "AIzaSyA_VII-o7zVyliueszM66wf1xYSn26dUbo",
+    authDomain: "sokoauthication.firebaseapp.com",
+    projectId: "sokoauthication",
+    storageBucket: "sokoauthication.firebasestorage.app",
+    messagingSenderId: "758223026817",
+    appId: "1:758223026817:web:a485d29ea4ffbe143eab80",
+    measurementId: "G-3J0QN5X2FF"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const playlistCollection = db.collection("playlist");
+
+  const songForm = document.getElementById('songForm');
+  const status = document.getElementById('status');
+  let curr_track = document.createElement('audio');
+
+  songForm.addEventListener('submit', async (e) => {
+    e.preventDefault(); 
+
+    // Collect all metadata fields
+    const title = document.getElementById('title').value.trim();
+    const artist = document.getElementById('artist').value.trim();
+    const album = document.getElementById('album').value.trim();
+    const genre = document.getElementById('genre').value.trim();
+    const year = parseInt(document.getElementById('year').value.trim());
+    const mood = document.getElementById('mood').value.trim();
+    const thumbnail = document.getElementById('thumbnail').value.trim();
+    const url = document.getElementById('url').value.trim();
+
+    if (!title || !artist || !genre || !year || !thumbnail || !url) {
+      status.textContent = "Title, Artist, Genre, Year, Thumbnail, and URL are required!";
+      status.style.color = "red";
+      return;
+    }
+
+    try {
+      await playlistCollection.add({
+        title,
+        artist,
+        album: album || null,
+        genre,
+        year,
+        mood: mood || null,
+        thumbnail,
+        url,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      status.textContent = "Song added successfully!";
+      status.style.color = "green";
+      songForm.reset();
+    } catch (err) {
+      console.error("Error adding song: ", err);
+      status.textContent = "Failed to add song. Check console.";
+      status.style.color = "red";
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Simple Music Player</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+  
+<style>
+body {
+  background-color: lightgreen;
+  /* Smoothly transition the background color */
+  transition: background-color .5s;
+  margin: 0;
+  padding: 0;
+}
+
+/* Main Player Container */
+.player {
+  height: 95vh;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  transition: all 0.4s ease-in-out;
+}
+
+/* --- MINIMIZE / MAXIMIZE CONTROLS --- */
+.window-controls {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  cursor: pointer;
+  z-index: 100;
+}
+
+.window-controls i {
+  font-size: 2rem;
+  opacity: 0.8;
+  transition: opacity .2s;
+}
+
+.window-controls i:hover {
+  opacity: 1.0;
+}
+
+/* Hide maximize button by default */
+.maximize-btn {
+  display: none;
+}
+
+/* Details Section */
+.details {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  margin-top: 25px;
+}
+
+.track-art {
+  margin: 25px;
+  height: 250px;
+  width: 250px;
+  background-image: URL("https://source.unsplash.com/Qrspubmx6kE/640x360");
+  background-size: cover;
+  background-position: center;
+  border-radius: 15%;
+  transition: all 0.4s ease; /* Animate size changes */
+}
+
+/* Text Sizes */
+.now-playing { font-size: 1rem; }
+.track-name { font-size: 3rem; }
+.track-artist { font-size: 1.5rem; }
+
+/* Buttons Section */
+.buttons {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.playpause-track,
+.prev-track,
+.next-track {
+  padding: 25px;
+  opacity: 0.8;
+  transition: opacity .2s, padding 0.4s;
+}
+
+.playpause-track:hover,
+.prev-track:hover,
+.next-track:hover {
+  opacity: 1.0;
+}
+
+/* Slider Section */
+.slider_container {
+  width: 75%;
+  max-width: 400px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.seek_slider, .volume_slider {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  height: 5px;
+  background: black;
+  opacity: 0.7;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
+}
+
+.seek_slider::-webkit-slider-thumb,
+.volume_slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  background: white;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.seek_slider:hover,
+.volume_slider:hover {
+  opacity: 1.0;
+}
+
+.seek_slider { width: 60%; }
+.volume_slider { width: 30%; }
+.current-time, .total-duration { padding: 10px; }
+i.fa-volume-down, i.fa-volume-up { padding: 10px; }
+i.fa-play-circle, i.fa-pause-circle, i.fa-step-forward, i.fa-step-backward { cursor: pointer; transition: font-size 0.4s; }
+
+
+/* =========================================
+   MINIMIZED BOTTOM BAR STATE
+   ========================================= */
+.player.minimized {
+  height: 80px;
+  width: 100%;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  flex-direction: row;
+  justify-content: space-between;
+  background-color: rgba(255, 255, 255, 0.9); /* Solid bar background */
+  box-shadow: 0 -2px 15px rgba(0,0,0,0.2);
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
+/* Hide unnecessary items */
+.player.minimized .now-playing,
+.player.minimized .track-name,
+.player.minimized .track-artist,
+.player.minimized .prev-track,
+.player.minimized .slider_container,
+.player.minimized .minimize-btn {
+  display: none;
+}
+
+/* Show Maximize button */
+.player.minimized .maximize-btn {
+  display: block;
+}
+
+/* Reposition Window Controls for minimized bar */
+.player.minimized .window-controls {
+  position: static;
+  margin-left: 15px;
+  display: flex;
+  align-items: center;
+}
+
+/* Adjust Details & Art for bottom bar */
+.player.minimized .details {
+  margin-top: 0;
+  flex-direction: row;
+  justify-content: flex-start;
+  flex: 1; /* Pushes buttons to the right */
+}
+
+.player.minimized .track-art {
+  height: 55px;
+  width: 55px;
+  margin: 0;
+  border-radius: 10%;
+}
+
+/* Adjust Button layout & sizes */
+.player.minimized .buttons {
+  flex-direction: row;
+}
+
+.player.minimized .playpause-track,
+.player.minimized .next-track {
+  padding: 10px;
+}
+
+.player.minimized .playpause-track i {
+  font-size: 2.5em; /* Scaled down from 5x */
+}
+
+.player.minimized .next-track i {
+  font-size: 1.8em; /* Scaled down from 2x */
+}
+</style>
+</head>
+<body>
+
+  <div class="player" id="appPlayer">
+    
+    <div class="window-controls">
+      <i class="fa fa-compress minimize-btn" title="Minimize" onclick="togglePlayer()"></i>
+      <i class="fa fa-expand maximize-btn" title="Maximize" onclick="togglePlayer()"></i>
+    </div>
+
+    <div class="details">
+      <div class="now-playing">PLAYING x OF y</div>
+      <div class="track-art"></div>
+      <div class="track-name">Track Name</div>
+      <div class="track-artist">Track Artist</div>
+    </div>
+
+    <div class="buttons">
+      <div class="prev-track" onclick="prevTrack()">
+        <i class="fa fa-step-backward fa-2x"></i>
+      </div>
+      <div class="playpause-track" onclick="playpauseTrack()">
+        <i class="fa fa-play-circle fa-5x"></i>
+      </div>
+      <div class="next-track" onclick="nextTrack()">
+        <i class="fa fa-step-forward fa-2x"></i>
+      </div>
+    </div>
+
+    <div class="slider_container">
+      <div class="current-time">00:00</div>
+      <input type="range" min="1" max="100" value="0" class="seek_slider" onchange="seekTo()">
+      <div class="total-duration">00:00</div>
+    </div>
+
+    <div class="slider_container">
+      <i class="fa fa-volume-down"></i>
+      <input type="range" min="1" max="100" value="99" class="volume_slider" onchange="setVolume()">
+      <i class="fa fa-volume-up"></i>
+    </div>
+  </div>
+
+  <script src="main.js"></script>
+
+  <script>
+    function togglePlayer() {
+      const player = document.getElementById('appPlayer');
+      // Toggles the 'minimized' class on the main player div
+      player.classList.toggle('minimized');
+    }
+  </script>
+</body>
+</html>

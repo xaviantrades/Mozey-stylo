@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+   <title>Cloud Music Player</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+ 
+<style>
+body {
+  background-color: #8fbc8f;
+  transition: background-color .5s;
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+}
+
+.player {
+  height: 95vh;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  transition: all 0.4s ease-in-out;
+}
+
+.window-controls {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  cursor: pointer;
+  z-index: 100;
+}
+
+.window-controls i {
+  font-size: 2rem;
+  opacity: 0.8;
+}
+
+.maximize-btn { display: none; }
+
+.details {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  margin-top: 25px;
+}
+
+.track-art {
+  margin: 25px;
+  height: 250px;
+  width: 250px;
+  border-radius: 15%;
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0px 10px 30px rgba(0,0,0,0.3);
+  transition: all 0.4s ease;
+}
+
+.now-playing { font-size: 1rem; text-transform: uppercase; }
+.track-name { font-size: 2.5rem; font-weight: bold; text-align: center; }
+.track-artist { font-size: 1.2rem; margin-top: 5px; }
+
+.buttons {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.playpause-track, .prev-track, .next-track {
+  padding: 25px;
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+.playpause-track:hover, .prev-track:hover, .next-track:hover { opacity: 1.0; }
+
+.slider_container {
+  width: 75%;
+  max-width: 400px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.seek_slider, .volume_slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 5px;
+  background: black;
+  opacity: 0.7;
+  transition: opacity .2s;
+}
+
+.seek_slider::-webkit-slider-thumb, .volume_slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 15px;
+  height: 15px;
+  background: white;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.seek_slider { width: 60%; }
+.volume_slider { width: 30%; }
+.current-time, .total-duration { padding: 10px; font-size: 0.9rem; }
+
+/* MINIMIZED STATE */
+.player.minimized {
+  height: 85px;
+  width: 100%;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  flex-direction: row;
+  justify-content: space-between;
+  background-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 -2px 15px rgba(0,0,0,0.2);
+  padding: 0 20px;
+  box-sizing: border-box;
+  z-index: 1000;
+}
+
+.player.minimized .now-playing,
+.player.minimized .track-name,
+.player.minimized .track-artist,
+.player.minimized .prev-track,
+.player.minimized .slider_container,
+.player.minimized .minimize-btn {
+  display: none;
+}
+
+.player.minimized .maximize-btn { display: block; }
+.player.minimized .window-controls { position: static; margin-left: 10px; }
+.player.minimized .details { margin: 0; flex-direction: row; flex: 1; }
+.player.minimized .track-art { height: 60px; width: 60px; margin: 0 15px 0 0; border-radius: 8px; }
+.player.minimized .playpause-track { padding: 10px; font-size: 0.6em; }
+.player.minimized .next-track { padding: 10px; font-size: 0.8em; }
+</style>
+</head>
+<body>
+
+  <div class="player minimized" id="appPlayer">
+    
+    <div class="window-controls">
+      <i class="fa fa-compress minimize-btn" title="Minimize" onclick="togglePlayer()"></i>
+      <i class="fa fa-expand maximize-btn" title="Maximize" onclick="togglePlayer()"></i>
+    </div>
+
+    <div class="details">
+      <div class="now-playing">Loading Playlist...</div>
+      <div class="track-art"></div>
+      <div class="track-name">Track Name</div>
+      <div class="track-artist">Track Artist</div>
+    </div>
+
+    <div class="buttons">
+      <div class="prev-track" onclick="prevTrack()">
+        <i class="fa fa-step-backward fa-2x"></i>
+      </div>
+      <div class="playpause-track" onclick="playPauseTrack()">
+        <i class="fa fa-play-circle fa-5x"></i>
+      </div>
+      <div class="next-track" onclick="nextTrack()">
+        <i class="fa fa-step-forward fa-2x"></i>
+      </div>
+    </div>
+
+    <div class="slider_container">
+      <div class="current-time">00:00</div>
+      <input type="range" min="1" max="100" value="0" class="seek_slider" onchange="seekTo()">
+      <div class="total-duration">00:00</div>
+    </div>
+
+    <div class="slider_container">
+      <i class="fa fa-volume-down"></i>
+      <input type="range" min="1" max="100" value="99" class="volume_slider" onchange="setVolume()">
+      <i class="fa fa-volume-up"></i>
+    </div>
+  </div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+<script>
+/* ===================== FIREBASE CONFIG ===================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyA_VII-o7zVyliueszM66wf1xYSn26dUbo",
+  authDomain: "sokoauthication.firebaseapp.com",
+  projectId: "sokoauthication",
+  storageBucket: "sokoauthication.firebasestorage.app",
+  messagingSenderId: "758223026817",
+  appId: "1:758223026817:web:a485d29ea4ffbe143eab80",
+  measurementId: "G-3J0QN5X2FF"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const playlistCollection = db.collection("playlist");
+
+/* ===================== PLAYER LOGIC ===================== */
+let now_playing = document.querySelector(".now-playing");
+let track_art = document.querySelector(".track-art");
+let track_name = document.querySelector(".track-name");
+let track_artist = document.querySelector(".track-artist");
+
+let playpause_btn = document.querySelector(".playpause-track i");
+let seek_slider = document.querySelector(".seek_slider");
+let volume_slider = document.querySelector(".volume_slider");
+let curr_time = document.querySelector(".current-time");
+let total_duration = document.querySelector(".total-duration");
+
+let track_index = 0;
+let isPlaying = false;
+let updateTimer;
+let track_list = [];
+
+// Create audio element
+let curr_track = document.createElement('audio');
+
+async function fetchPlaylistFromFirestore() {
+  try {
+    const snapshot = await playlistCollection.get();
+    track_list = snapshot.docs.map(doc => ({
+      name: doc.data().title,
+      artist: doc.data().artist,
+      image: doc.data().thumbnail,
+      path: doc.data().url
+    }));
+    
+    if(track_list.length > 0) {
+      loadTrack(track_index);
+    } else {
+      now_playing.textContent = "No tracks found in Cloud";
+    }
+  } catch (err) {
+    console.error("Error fetching playlist: ", err);
+  }
+}
+
+function loadTrack(track_index) {
+  clearInterval(updateTimer);
+  resetValues();
+
+  curr_track.src = track_list[track_index].path;
+  curr_track.load();
+
+  track_art.style.backgroundImage = "url(" + track_list[track_index].image + ")";
+  track_name.textContent = track_list[track_index].name;
+  track_artist.textContent = track_list[track_index].artist;
+  now_playing.textContent = "PLAYING " + (track_index + 1) + " OF " + track_list.length;
+
+  updateTimer = setInterval(seekUpdate, 1000);
+  curr_track.addEventListener("ended", nextTrack);
+  random_bg_color();
+}
+
+function random_bg_color() {
+  let red = Math.floor(Math.random() * 64) + 150;
+  let green = Math.floor(Math.random() * 64) + 150;
+  let blue = Math.floor(Math.random() * 64) + 150;
+  document.body.style.backgroundColor = `rgb(${red}, ${green}, ${blue})`;
+}
+
+function resetValues() {
+  curr_time.textContent = "00:00";
+  total_duration.textContent = "00:00";
+  seek_slider.value = 0;
+}
+
+function playPauseTrack() {
+  if (!isPlaying) playTrack();
+  else pauseTrack();
+}
+
+function playTrack() {
+  curr_track.play();
+  isPlaying = true;
+  playpause_btn.classList.remove('fa-play-circle');
+  playpause_btn.classList.add('fa-pause-circle');
+}
+
+function pauseTrack() {
+  curr_track.pause();
+  isPlaying = false;
+  playpause_btn.classList.remove('fa-pause-circle');
+  playpause_btn.classList.add('fa-play-circle');
+}
+
+function nextTrack() {
+  if (track_index < track_list.length - 1) track_index += 1;
+  else track_index = 0;
+  loadTrack(track_index);
+  playTrack();
+}
+
+function prevTrack() {
+  if (track_index > 0) track_index -= 1;
+  else track_index = track_list.length - 1;
+  loadTrack(track_index);
+  playTrack();
+}
+
+function seekTo() {
+  let seekto = curr_track.duration * (seek_slider.value / 100);
+  curr_track.currentTime = seekto;
+}
+
+function setVolume() {
+  curr_track.volume = volume_slider.value / 100;
+}
+
+function seekUpdate() {
+  let seekPosition = 0;
+  if (!isNaN(curr_track.duration)) {
+    seekPosition = curr_track.currentTime * (100 / curr_track.duration);
+    seek_slider.value = seekPosition;
+
+    let currentMinutes = Math.floor(curr_track.currentTime / 60);
+    let currentSeconds = Math.floor(curr_track.currentTime - currentMinutes * 60);
+    let durationMinutes = Math.floor(curr_track.duration / 60);
+    let durationSeconds = Math.floor(curr_track.duration - durationMinutes * 60);
+
+    if (currentSeconds < 10) { currentSeconds = "0" + currentSeconds; }
+    if (durationSeconds < 10) { durationSeconds = "0" + durationSeconds; }
+    if (currentMinutes < 10) { currentMinutes = "0" + currentMinutes; }
+    if (durationMinutes < 10) { durationMinutes = "0" + durationMinutes; }
+
+    curr_time.textContent = currentMinutes + ":" + currentSeconds;
+    total_duration.textContent = durationMinutes + ":" + durationSeconds;
+  }
+}
+
+function togglePlayer() {
+  document.getElementById('appPlayer').classList.toggle('minimized');
+}
+
+// Start
+fetchPlaylistFromFirestore();
+</script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mozey stylo Project</title>
+<link href="style.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+/>
+</head>
+<body>
+
+<header id="heading">
+  <h1>Alur Beatz</h1>
+  <button>Listen in app</button>
+</header>
+
+<div class="header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+  <h2 style="margin: 0; font-size: 24px;">Quick picks</h2>
+  <button style="background: transparent; color: white; border: 1px solid #555; border-radius: 20px; padding: 6px 14px; font-size: 13px; cursor: pointer;">Play all</button>
+</div>
+
+<div id="container"></div> 
+
+<div id="homescreen" style="display: block;">
+ 
+</div>
+
+</div>
+
+<div class="player minimized" id="appPlayer">
+    
+  <div class="window-controls">
+    <i class="fa fa-compress minimize-btn" title="Minimize" onclick="toggle1()" id="minibtn"></i>
+    <i class="fa fa-expand maximize-btn" title="Maximize" onclick="toggle2()" id="maxbtn"></i>
+  </div>
+
+  <div class="details">
+    <div class="now-playing">Loading Playlist...</div>
+    <div class="track-art"></div>
+    <div class="track-name">Track Name</div>
+    <div class="track-artist">Track Artist</div>
+  </div>
+
+  <div class="buttons">
+    <div class="prev-track" onclick="prevTrack()">
+      <i class="fa fa-step-backward fa-2x"></i>
+    </div>
+    <div class="playpause-track" onclick="playPauseTrack()">
+      <i class="fa fa-play-circle fa-5x"></i>
+    </div>
+    <div class="next-track" onclick="nextTrack()">
+      <i class="fa fa-step-forward fa-2x"></i>
+    </div>
+  </div>
+<audio id="audio" ></audio>
+  <div class="slider_container">
+    <div class="current-time">00:00</div>
+    <input type="range" min="1" max="100" value="0" class="seek_slider" onchange="seekTo()">
+    <div class="total-duration">00:00</div>
+  </div>
+
+</div>
+<div id="add-song-form" style="display:none;">
+  <h2>Add New Song</h2>
+  <form id="songForm">
+    <label for="title">Song Title:</label>
+    <input type="text" id="title" required><br><br>
+
+    <label for="artist">Artist:</label>
+    <input type="text" id="artist" required><br><br>
+
+    <label for="thumbnail">Thumbnail URL:</label>
+    <input type="text" id="thumbnail" placeholder="https://..." required><br><br>
+
+    <label for="url">Song URL:</label>
+    <input type="text" id="url" placeholder="https://..." required><br><br>
+
+    <button type="submit">Add Song</button>
+  </form>
+
+  <p id="status"></p>
+</div>
+
+
+<nav>
+  <div  id="home">Home</div>
+  <a href="uploadfile.html" id="feed">Feed</a>
+  <div>Search</div>
+  <div>Library</div>
+  <div  id="download" >Download</div>
+</nav>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="mstyl.js"></script>
+</body>
+</html>

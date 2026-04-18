@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SoundCloud Project</title>
+
+</head>
+<body>
+
+<header>
+  <h1>Mozey Stylo</h1>
+  <button>Listen in app</button>
+</header>
+<div id="add-song-form">
+  <h2>Add New Song</h2>
+  <form id="songForm">
+    <label for="title">Song Title:</label>
+    <input type="text" id="title" required><br><br>
+
+    <label for="artist">Artist:</label>
+    <input type="text" id="artist" required><br><br>
+
+    <label for="thumbnail">Thumbnail URL:</label>
+    <input type="text" id="thumbnail" placeholder="https://..." required><br><br>
+
+    <label for="url">Song URL:</label>
+    <input type="text" id="url" placeholder="https://..." required><br><br>
+
+    <button type="submit">Add Song</button>
+  </form>
+
+  <p id="status"></p>
+</div>
+
+<nav>
+  <div>Home</div>
+  <div>Feed</div>
+  <div>Search</div>
+  <div>Library</div>
+  <div>Download</div>
+</nav>
+<script src="mstyl.js"></script>
+</body>
+</html>
