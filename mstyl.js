@@ -228,7 +228,9 @@ function toggle1() {
 document.getElementById('appPlayer').classList.add('minimized');
 
 
+document.getElementById("heading").style.display='flex';
 
+document.getElementById("homescreen").style.display='block';
 
 
 document.getElementById("minibtn").style.display='none';
@@ -243,6 +245,7 @@ document.getElementById('appPlayer').classList.remove('minimized');
 
 document.getElementById("homescreen").style.display='none';
 
+document.getElementById("heading").style.display='none';
 
 document.getElementById("maxbtn").style.display='none';
 
