@@ -104,7 +104,7 @@ body {
     display: flex;
     flex-direction: row;
     align-items: center;
-    margin-top: 20px;
+  
   }
   
   .playpause-track, .prev-track, .next-track {
@@ -175,7 +175,7 @@ body {
   .player.minimized .maximize-btn { display: block; }
   .player.minimized .window-controls { position: static; margin-left: 10px; }
   .player.minimized .details { margin: 0; flex-direction: row; flex: 1; }
-  .player.minimized .track-art { height: 60px; width: 60px; margin: 0 15px 0 0; border-radius: 8px; }
+  .player.minimized .track-art { display:none; }
   .player.minimized .playpause-track { padding: 10px; font-size: 0.6em; }
   .player.minimized .next-track { padding: 10px; font-size: 0.8em; }
   
