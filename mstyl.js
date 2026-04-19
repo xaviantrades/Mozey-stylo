@@ -251,8 +251,6 @@ document.getElementById("maxbtn").style.display='none';
 
 document.getElementById("minibtn").style.display='block';
 
-
-
 }
 // ===================== INITIAL FETCH =====================
 fetchPlaylistFromFirestore();
